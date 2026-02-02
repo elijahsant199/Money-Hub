@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Money Hub</title>
+<style>
+body{font-family:Arial;background:#0f172a;color:white;margin:0;padding:0}
+.container{max-width:420px;margin:auto;padding:15px}
+.card{background:#111827;padding:12px;margin:10px 0;border-radius:10px}
+button{width:100%;padding:10px;margin-top:6px;border:none;border-radius:8px;background:#06b6d4;color:black;font-weight:bold}
+input,select{width:100%;padding:8px;margin:4px 0;border-radius:6px;border:none}
+.list{font-size:14px}
+.tab{display:flex;gap:6px}
+.tab button{flex:1}
+</style>
+</head>
+<body>
+<div class='container'>
+<h2>Money Hub</h2>
+
+<div class='tab'>
+<button onclick="show('dash')">Dashboard</button>
+<button onclick="show('add')">Add Entry</button>
+<button onclick="show('set')">Settings</button>
+</div>
+
+<div id='dash' class='card'>
+<h3>Summary</h3>
+<div id='summary'></div>
+<h4>History</h4>
+<div id='hist' class='list'></div>
+</div>
+
+<div id='add' class='card' style='display:none'>
+<h3>Add Entry</h3>
+<select id='type'>
+<option>Income</option>
+<option>Expense</option>
+</select>
+<input id='amt' placeholder='Amount' type='number'/>
+<select id='cat'>
+<option>Mandatory</option>
+<option>Fun</option>
+<option>Bills</option>
+<option>Gas</option>
+<option>Food</option>
+<option>Other</option>
+</select>
+<input id='note' placeholder='Note (optional)'/>
+<select id='mode'>
+<option>Daily Entry</option>
+<option>Weekly Total</option>
+</select>
+<button onclick='add()'>Save</button>
+</div>
+
+<div id='set' class='card' style='display:none'>
+<h3>Monthly Bills Setup</h3>
+<input id='billTotal' placeholder='Total Monthly Bills'/>
+<button onclick='saveBills()'>Save Bills</button>
+</div>
+
+</div>
+
+<script>
+function load(){return JSON.parse(localStorage.getItem('hub')||'{"e":[],"b":0}')}
+function save(d){localStorage.setItem('hub',JSON.stringify(d))}
+
+function show(id){['dash','add','set'].forEach(x=>document.getElementById(x).style.display='none');document.getElementById(id).style.display='block';render()}
+
+function add(){
+let d=load();
+d.e.push({
+ t:type.value,
+ a:+amt.value,
+ c:cat.value,
+ n:note.value,
+ m:mode.value,
+ date:new Date().toLocaleDateString()
+});
+save(d);amt.value='';note.value='';show('dash');
+}
+
+function saveBills(){
+let d=load();d.b=+billTotal.value;save(d);show('dash');
+}
+
+function render(){
+let d=load();
+let inc=d.e.filter(x=>x.t=='Income').reduce((s,x)=>s+x.a,0);
+let exp=d.e.filter(x=>x.t=='Expense').reduce((s,x)=>s+x.a,0);
+let left=inc-exp-d.b;
+summary.innerHTML=`Income: $${inc}<br/>Expenses: $${exp}<br/>Bills: $${d.b}<br/><b>Left: $${left}</b>`;
+
+hist.innerHTML=d.e.slice().reverse().map(x=>
+`<div>${x.date} - ${x.t} $${x.a} (${x.c}) ${x.n}</div>`).join('');
+billTotal.value=d.b;
+}
+render();
+</script>
+</body>
+</html>
