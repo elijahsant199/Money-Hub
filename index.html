@@ -4,14 +4,101 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Money Hub</title>
 <style>
-body{font-family:Arial;background:#0f172a;color:white;margin:0;padding:0}
-.container{max-width:420px;margin:auto;padding:15px}
-.card{background:#111827;padding:12px;margin:10px 0;border-radius:10px}
-button{width:100%;padding:10px;margin-top:6px;border:none;border-radius:8px;background:#06b6d4;color:black;font-weight:bold}
-input,select{width:100%;padding:8px;margin:4px 0;border-radius:6px;border:none}
-.list{font-size:14px}
-.tab{display:flex;gap:6px}
-.tab button{flex:1}
+:root{
+ --bg:#0b0f18;
+ --card:#111827;
+ --neon:#2fffa3; /* classy neon mint */
+ --text:#ffffff;
+ --sub:#94a3b8;
+ --red:#ff5c5c;
+}
+
+body{
+ font-family:system-ui, -apple-system, Arial;
+ background:var(--bg);
+ color:var(--text);
+ margin:0;
+ padding:0;
+}
+
+.container{
+ max-width:420px;
+ margin:auto;
+ padding:15px;
+}
+
+h2{
+ letter-spacing:1px;
+}
+
+.card{
+ background:var(--card);
+ padding:14px;
+ margin:10px 0;
+ border-radius:14px;
+ box-shadow:0 0 8px rgba(0,0,0,.3);
+}
+
+.big{
+ font-size:26px;
+ font-weight:bold;
+}
+
+.neon{
+ color:var(--neon);
+ text-shadow:0 0 6px rgba(47,255,163,.6);
+}
+
+button{
+ width:100%;
+ padding:11px;
+ margin-top:6px;
+ border:none;
+ border-radius:10px;
+ background:var(--neon);
+ color:#000;
+ font-weight:bold;
+}
+
+.secondary{
+ background:#0b0f18;
+ color:var(--neon);
+ border:1px solid var(--neon);
+}
+
+input,select{
+ width:100%;
+ padding:9px;
+ margin:6px 0;
+ border-radius:10px;
+ border:1px solid #1f2937;
+ background:#0b0f18;
+ color:white;
+}
+
+.list{
+ font-size:14px;
+ color:var(--sub);
+}
+
+.tab{
+ display:flex;
+ gap:8px;
+}
+
+.tab button{
+ flex:1;
+}
+
+.row{
+ display:flex;
+ justify-content:space-between;
+ margin:6px 0;
+}
+
+.income{color:var(--neon)}
+.expense{color:var(--red)}
+
 </style>
 </head>
 <body>
@@ -19,25 +106,32 @@ input,select{width:100%;padding:8px;margin:4px 0;border-radius:6px;border:none}
 <h2>Money Hub</h2>
 
 <div class='tab'>
-<button onclick="show('dash')">Dashboard</button>
-<button onclick="show('add')">Add Entry</button>
-<button onclick="show('set')">Settings</button>
+<button class='secondary' onclick="show('dash')">Dashboard</button>
+<button class='secondary' onclick="show('add')">Log Money</button>
+<button class='secondary' onclick="show('set')">Settings</button>
 </div>
 
 <div id='dash' class='card'>
-<h3>Summary</h3>
+<div class='big neon' id='leftBox'>$0</div>
+<div style='color:var(--sub)'>Safe to Spend</div>
+
+<hr style='opacity:.2'/>
+
 <div id='summary'></div>
-<h4>History</h4>
+
+<h4 style='margin-top:10px'>History</h4>
 <div id='hist' class='list'></div>
 </div>
 
 <div id='add' class='card' style='display:none'>
-<h3>Add Entry</h3>
+<h3>Log Money</h3>
 <select id='type'>
 <option>Income</option>
 <option>Expense</option>
 </select>
+
 <input id='amt' placeholder='Amount' type='number'/>
+
 <select id='cat'>
 <option>Mandatory</option>
 <option>Fun</option>
@@ -46,12 +140,15 @@ input,select{width:100%;padding:8px;margin:4px 0;border-radius:6px;border:none}
 <option>Food</option>
 <option>Other</option>
 </select>
+
 <input id='note' placeholder='Note (optional)'/>
+
 <select id='mode'>
 <option>Daily Entry</option>
 <option>Weekly Total</option>
 </select>
-<button onclick='add()'>Save</button>
+
+<button onclick='add()'>Save Entry</button>
 </div>
 
 <div id='set' class='card' style='display:none'>
@@ -78,7 +175,8 @@ d.e.push({
  m:mode.value,
  date:new Date().toLocaleDateString()
 });
-save(d);amt.value='';note.value='';show('dash');
+save(d);
+amt.value='';note.value='';show('dash');
 }
 
 function saveBills(){
@@ -90,12 +188,21 @@ let d=load();
 let inc=d.e.filter(x=>x.t=='Income').reduce((s,x)=>s+x.a,0);
 let exp=d.e.filter(x=>x.t=='Expense').reduce((s,x)=>s+x.a,0);
 let left=inc-exp-d.b;
-summary.innerHTML=`Income: $${inc}<br/>Expenses: $${exp}<br/>Bills: $${d.b}<br/><b>Left: $${left}</b>`;
+
+leftBox.innerText='$'+left;
+
+summary.innerHTML=`
+<div class='row'><span>Income</span><span class='income'>$${inc}</span></div>
+<div class='row'><span>Spent</span><span class='expense'>$${exp}</span></div>
+<div class='row'><span>Bills</span><span>$${d.b}</span></div>
+`;
 
 hist.innerHTML=d.e.slice().reverse().map(x=>
-`<div>${x.date} - ${x.t} $${x.a} (${x.c}) ${x.n}</div>`).join('');
+`<div class='${x.t=='Income'?'income':'expense'}'>${x.date} • ${x.t} $${x.a} • ${x.c} ${x.n}</div>`).join('');
+
 billTotal.value=d.b;
 }
+
 render();
 </script>
 </body>
