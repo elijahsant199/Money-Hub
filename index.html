@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Money Hub</title>
 <style>
 :root{
@@ -21,9 +21,9 @@ body{
 }
 
 .container{
- max-width:900px;
+ max-width:1000px;
  margin:auto;
- padding:12px;
+ padding:18px;
 }
 
 .neon{color:var(--neon);text-shadow:0 0 6px rgba(47,255,163,.6)}
@@ -31,27 +31,28 @@ body{
 .grid{
  display:grid;
  grid-template-columns:1fr;
- gap:10px;
+ gap:16px;
 }
 
-@media(min-width:800px){
+@media(min-width:900px){
  .grid{grid-template-columns:1fr 1fr}
 }
 
 .card{
  background:var(--card);
- border-radius:14px;
- padding:12px;
+ border-radius:18px;
+ padding:18px;
+ margin-bottom:14px;
 }
 
-.big{font-size:28px;font-weight:bold}
+.big{font-size:32px;font-weight:bold}
 
-.row{display:flex;justify-content:space-between;margin:6px 0}
+.row{display:flex;justify-content:space-between;margin:8px 0}
 
 button{
- padding:10px;
+ padding:12px 14px;
  border:none;
- border-radius:10px;
+ border-radius:12px;
  background:var(--neon);
  color:black;
  font-weight:bold;
@@ -65,9 +66,9 @@ button{
 
 input,select{
  width:100%;
- padding:9px;
- margin:6px 0;
- border-radius:10px;
+ padding:11px;
+ margin:8px 0;
+ border-radius:12px;
  border:1px solid #1f2937;
  background:#0b0f18;
  color:white;
@@ -76,13 +77,24 @@ input,select{
 .income{color:var(--neon)}
 .expense{color:var(--red)}
 
-.tabs{display:flex;gap:6px;margin-bottom:8px}
+.tabs{display:flex;gap:10px;margin-bottom:14px}
 .tabs button{flex:1}
 
-.chip{padding:4px 8px;border-radius:8px;background:#0b0f18;border:1px solid #1f2937}
+.item{padding:10px 0;border-bottom:1px solid #1f2937}
 
-.item{padding:6px 0;border-bottom:1px solid #1f2937}
-.actions{display:flex;gap:6px}
+.actions{
+ display:flex;
+ gap:10px;
+ margin:10px 0;
+}
+
+.iconBtn{
+ background:none;
+ border:1px solid var(--neon);
+ color:var(--neon);
+ padding:6px 10px;
+ border-radius:10px;
+}
 
 </style>
 </head>
@@ -97,11 +109,9 @@ input,select{
 <button class='secondary' onclick="show('set')">Settings</button>
 </div>
 
-<!-- DASHBOARD -->
 <div id='dash'>
 
 <div class='grid'>
-
 <div class='card'>
 <div class='big neon' id='leftBox'>$0</div>
 <div style='color:var(--sub)'>Safe to Spend</div>
@@ -112,31 +122,25 @@ input,select{
 <div class='row'><span>Spent</span><span id='expBox' class='expense'>$0</span></div>
 <div class='row'><span>Bills</span><span id='billBox'>$0</span></div>
 </div>
-
 </div>
 
-<div class='card'>
 <div class='actions'>
-<button onclick="openLog('Income')">Money Log</button>
+<button onclick="toggleLog('Income')">Money Log</button>
 <button onclick="openPaycheck()">Add Paycheck</button>
-<button onclick="openLog('Expense')">Add Expense</button>
-</div>
+<button onclick="toggleLog('Expense')">Add Expense</button>
 </div>
 
 <div class='card'>
 <h4>Recent</h4>
 <div id='recent'></div>
 </div>
-
 </div>
 
-<!-- ACTIVITY -->
 <div id='act' class='card' style='display:none'>
 <h3>Activity</h3>
 <div id='hist'></div>
 </div>
 
-<!-- GOALS -->
 <div id='goals' class='card' style='display:none'>
 <h3>Goals & Payments</h3>
 <input id='gName' placeholder='Name'/>
@@ -146,14 +150,12 @@ input,select{
 <div id='goalList'></div>
 </div>
 
-<!-- SETTINGS -->
 <div id='set' class='card' style='display:none'>
 <h3>Monthly Bills</h3>
 <input id='billTotal' placeholder='Total Monthly Bills'/>
 <button onclick='saveBills()'>Save Bills</button>
 </div>
 
-<!-- LOG MODAL -->
 <div id='log' class='card' style='display:none'>
 <h3 id='logTitle'></h3>
 <input id='amt' type='number' placeholder='Amount'/>
@@ -179,8 +181,12 @@ let editId=null;
 
 function show(id){['dash','act','goals','set','log'].forEach(x=>document.getElementById(x).style.display='none');document.getElementById(id).style.display='block';render()}
 
-function openLog(t){editId=null;logTitle.innerText=t;log.style.display='block'}
-function openPaycheck(){openLog('Income');note.value='Paycheck'}
+function toggleLog(t){
+ if(log.style.display=='block'){log.style.display='none';return}
+ editId=null;logTitle.innerText=t;log.style.display='block'
+}
+
+function openPaycheck(){toggleLog('Income');note.value='Paycheck'}
 
 function saveEntry(){
 let d=load();
@@ -213,9 +219,7 @@ function render(){
 let d=load();
 let inc=d.e.filter(x=>x.t=='Income').reduce((s,x)=>s+x.a,0);
 let exp=d.e.filter(x=>x.t=='Expense').reduce((s,x)=>s+x.a,0);
-
 let goalSub=d.g.filter(x=>x.m=='on').reduce((s,x)=>s+(x.t-x.p),0);
-
 let left=inc-exp-d.b-goalSub;
 
 leftBox.innerText='$'+left;
@@ -224,15 +228,15 @@ expBox.innerText='$'+exp;
 billBox.innerText='$'+d.b;
 billTotal.value=d.b;
 
-recent.innerHTML=d.e.slice(-5).reverse().map((x,i)=>
+recent.innerHTML=d.e.slice(-5).reverse().map(x=>
 `<div class='item ${x.t=='Income'?'income':'expense'}'>${x.n||x.c} $${x.a}</div>`).join('');
 
 hist.innerHTML=d.e.map((x,i)=>
 `<div class='item ${x.t=='Income'?'income':'expense'}'>
 ${x.date} • ${x.t} $${x.a} • ${x.c} ${x.n}
 <div class='actions'>
-<button class='secondary' onclick='editEntry(${i})'>Edit</button>
-<button class='secondary' onclick='delEntry(${i})'>Delete</button>
+<button class='iconBtn' onclick='editEntry(${i})'>Edit</button>
+<button class='iconBtn' onclick='delEntry(${i})'>Delete</button>
 </div></div>`).reverse().join('');
 
 goalList.innerHTML=d.g.map((x,i)=>
@@ -247,4 +251,3 @@ render();
 </script>
 </body>
 </html>
-
