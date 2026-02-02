@@ -7,7 +7,7 @@
 :root{
  --bg:#0b0f18;
  --card:#111827;
- --neon:#2fffa3; /* classy neon mint */
+ --neon:#2fffa3;
  --text:#ffffff;
  --sub:#94a3b8;
  --red:#ff5c5c;
@@ -18,45 +18,42 @@ body{
  background:var(--bg);
  color:var(--text);
  margin:0;
- padding:0;
 }
 
 .container{
- max-width:420px;
+ max-width:900px;
  margin:auto;
- padding:15px;
+ padding:12px;
 }
 
-h2{
- letter-spacing:1px;
+.neon{color:var(--neon);text-shadow:0 0 6px rgba(47,255,163,.6)}
+
+.grid{
+ display:grid;
+ grid-template-columns:1fr;
+ gap:10px;
+}
+
+@media(min-width:800px){
+ .grid{grid-template-columns:1fr 1fr}
 }
 
 .card{
  background:var(--card);
- padding:14px;
- margin:10px 0;
  border-radius:14px;
- box-shadow:0 0 8px rgba(0,0,0,.3);
+ padding:12px;
 }
 
-.big{
- font-size:26px;
- font-weight:bold;
-}
+.big{font-size:28px;font-weight:bold}
 
-.neon{
- color:var(--neon);
- text-shadow:0 0 6px rgba(47,255,163,.6);
-}
+.row{display:flex;justify-content:space-between;margin:6px 0}
 
 button{
- width:100%;
- padding:11px;
- margin-top:6px;
+ padding:10px;
  border:none;
  border-radius:10px;
  background:var(--neon);
- color:#000;
+ color:black;
  font-weight:bold;
 }
 
@@ -76,28 +73,16 @@ input,select{
  color:white;
 }
 
-.list{
- font-size:14px;
- color:var(--sub);
-}
-
-.tab{
- display:flex;
- gap:8px;
-}
-
-.tab button{
- flex:1;
-}
-
-.row{
- display:flex;
- justify-content:space-between;
- margin:6px 0;
-}
-
 .income{color:var(--neon)}
 .expense{color:var(--red)}
+
+.tabs{display:flex;gap:6px;margin-bottom:8px}
+.tabs button{flex:1}
+
+.chip{padding:4px 8px;border-radius:8px;background:#0b0f18;border:1px solid #1f2937}
+
+.item{padding:6px 0;border-bottom:1px solid #1f2937}
+.actions{display:flex;gap:6px}
 
 </style>
 </head>
@@ -105,33 +90,73 @@ input,select{
 <div class='container'>
 <h2>Money Hub</h2>
 
-<div class='tab'>
+<div class='tabs'>
 <button class='secondary' onclick="show('dash')">Dashboard</button>
-<button class='secondary' onclick="show('add')">Log Money</button>
+<button class='secondary' onclick="show('act')">Activity</button>
+<button class='secondary' onclick="show('goals')">Goals</button>
 <button class='secondary' onclick="show('set')">Settings</button>
 </div>
 
-<div id='dash' class='card'>
+<!-- DASHBOARD -->
+<div id='dash'>
+
+<div class='grid'>
+
+<div class='card'>
 <div class='big neon' id='leftBox'>$0</div>
 <div style='color:var(--sub)'>Safe to Spend</div>
-
-<hr style='opacity:.2'/>
-
-<div id='summary'></div>
-
-<h4 style='margin-top:10px'>History</h4>
-<div id='hist' class='list'></div>
 </div>
 
-<div id='add' class='card' style='display:none'>
-<h3>Log Money</h3>
-<select id='type'>
-<option>Income</option>
-<option>Expense</option>
-</select>
+<div class='card'>
+<div class='row'><span>Income</span><span id='incBox' class='income'>$0</span></div>
+<div class='row'><span>Spent</span><span id='expBox' class='expense'>$0</span></div>
+<div class='row'><span>Bills</span><span id='billBox'>$0</span></div>
+</div>
 
-<input id='amt' placeholder='Amount' type='number'/>
+</div>
 
+<div class='card'>
+<div class='actions'>
+<button onclick="openLog('Income')">Money Log</button>
+<button onclick="openPaycheck()">Add Paycheck</button>
+<button onclick="openLog('Expense')">Add Expense</button>
+</div>
+</div>
+
+<div class='card'>
+<h4>Recent</h4>
+<div id='recent'></div>
+</div>
+
+</div>
+
+<!-- ACTIVITY -->
+<div id='act' class='card' style='display:none'>
+<h3>Activity</h3>
+<div id='hist'></div>
+</div>
+
+<!-- GOALS -->
+<div id='goals' class='card' style='display:none'>
+<h3>Goals & Payments</h3>
+<input id='gName' placeholder='Name'/>
+<input id='gTarget' type='number' placeholder='Target Amount'/>
+<select id='gMode'><option value='off'>Do not affect safe to spend</option><option value='on'>Subtract from safe to spend</option></select>
+<button onclick='addGoal()'>Create Goal</button>
+<div id='goalList'></div>
+</div>
+
+<!-- SETTINGS -->
+<div id='set' class='card' style='display:none'>
+<h3>Monthly Bills</h3>
+<input id='billTotal' placeholder='Total Monthly Bills'/>
+<button onclick='saveBills()'>Save Bills</button>
+</div>
+
+<!-- LOG MODAL -->
+<div id='log' class='card' style='display:none'>
+<h3 id='logTitle'></h3>
+<input id='amt' type='number' placeholder='Amount'/>
 <select id='cat'>
 <option>Mandatory</option>
 <option>Fun</option>
@@ -140,67 +165,82 @@ input,select{
 <option>Food</option>
 <option>Other</option>
 </select>
-
-<input id='note' placeholder='Note (optional)'/>
-
-<select id='mode'>
-<option>Daily Entry</option>
-<option>Weekly Total</option>
-</select>
-
-<button onclick='add()'>Save Entry</button>
-</div>
-
-<div id='set' class='card' style='display:none'>
-<h3>Monthly Bills Setup</h3>
-<input id='billTotal' placeholder='Total Monthly Bills'/>
-<button onclick='saveBills()'>Save Bills</button>
+<input id='note' placeholder='Note'/>
+<button onclick='saveEntry()'>Save</button>
 </div>
 
 </div>
 
 <script>
-function load(){return JSON.parse(localStorage.getItem('hub')||'{"e":[],"b":0}')}
-function save(d){localStorage.setItem('hub',JSON.stringify(d))}
+function load(){return JSON.parse(localStorage.getItem('hub2')||'{"e":[],"b":0,"g":[]}')}
+function save(d){localStorage.setItem('hub2',JSON.stringify(d))}
 
-function show(id){['dash','add','set'].forEach(x=>document.getElementById(x).style.display='none');document.getElementById(id).style.display='block';render()}
+let editId=null;
 
-function add(){
+function show(id){['dash','act','goals','set','log'].forEach(x=>document.getElementById(x).style.display='none');document.getElementById(id).style.display='block';render()}
+
+function openLog(t){editId=null;logTitle.innerText=t;log.style.display='block'}
+function openPaycheck(){openLog('Income');note.value='Paycheck'}
+
+function saveEntry(){
 let d=load();
-d.e.push({
- t:type.value,
- a:+amt.value,
- c:cat.value,
- n:note.value,
- m:mode.value,
- date:new Date().toLocaleDateString()
-});
-save(d);
-amt.value='';note.value='';show('dash');
+let obj={t:logTitle.innerText,a:+amt.value,c:cat.value,n:note.value,date:new Date().toLocaleDateString()};
+
+if(editId!=null)d.e[editId]=obj;
+else d.e.push(obj);
+
+save(d);amt.value='';note.value='';show('act');
 }
 
-function saveBills(){
-let d=load();d.b=+billTotal.value;save(d);show('dash');
+function editEntry(i){
+let d=load();let x=d.e[i];editId=i;
+logTitle.innerText=x.t;amt.value=x.a;cat.value=x.c;note.value=x.n;log.style.display='block'
 }
+
+function delEntry(i){let d=load();d.e.splice(i,1);save(d);render()}
+
+function saveBills(){let d=load();d.b=+billTotal.value;save(d);render()}
+
+function addGoal(){
+let d=load();
+d.g.push({n:gName.value,t:+gTarget.value,p:0,m:gMode.value});
+save(d);gName.value='';gTarget.value='';render()
+}
+
+function payGoal(i){let v=+prompt('Payment amount');let d=load();d.g[i].p+=v;save(d);render()}
 
 function render(){
 let d=load();
 let inc=d.e.filter(x=>x.t=='Income').reduce((s,x)=>s+x.a,0);
 let exp=d.e.filter(x=>x.t=='Expense').reduce((s,x)=>s+x.a,0);
-let left=inc-exp-d.b;
+
+let goalSub=d.g.filter(x=>x.m=='on').reduce((s,x)=>s+(x.t-x.p),0);
+
+let left=inc-exp-d.b-goalSub;
 
 leftBox.innerText='$'+left;
-
-summary.innerHTML=`
-<div class='row'><span>Income</span><span class='income'>$${inc}</span></div>
-<div class='row'><span>Spent</span><span class='expense'>$${exp}</span></div>
-<div class='row'><span>Bills</span><span>$${d.b}</span></div>
-`;
-
-hist.innerHTML=d.e.slice().reverse().map(x=>
-`<div class='${x.t=='Income'?'income':'expense'}'>${x.date} • ${x.t} $${x.a} • ${x.c} ${x.n}</div>`).join('');
-
+incBox.innerText='$'+inc;
+expBox.innerText='$'+exp;
+billBox.innerText='$'+d.b;
 billTotal.value=d.b;
+
+recent.innerHTML=d.e.slice(-5).reverse().map((x,i)=>
+`<div class='item ${x.t=='Income'?'income':'expense'}'>${x.n||x.c} $${x.a}</div>`).join('');
+
+hist.innerHTML=d.e.map((x,i)=>
+`<div class='item ${x.t=='Income'?'income':'expense'}'>
+${x.date} • ${x.t} $${x.a} • ${x.c} ${x.n}
+<div class='actions'>
+<button class='secondary' onclick='editEntry(${i})'>Edit</button>
+<button class='secondary' onclick='delEntry(${i})'>Delete</button>
+</div></div>`).reverse().join('');
+
+goalList.innerHTML=d.g.map((x,i)=>
+`<div class='item'>
+<b>${x.n}</b> $${x.p}/$${x.t}
+<div class='actions'>
+<button onclick='payGoal(${i})'>Add Payment</button>
+</div></div>`).join('');
 }
 
 render();
